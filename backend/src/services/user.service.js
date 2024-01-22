@@ -10,3 +10,11 @@ export const createUser = async userData => {
 export const findUserById = async userId => {
   return UserModel.findById(userId);
 };
+
+export const findUsers = async () => {
+  return UserModel.find({}, { __v: 0 });
+};
+
+export const findUserAndUpdate = async (condition, updatedDetails) => {
+  return await UserModel.findOneAndUpdate(condition, updatedDetails, { new: true });
+};
