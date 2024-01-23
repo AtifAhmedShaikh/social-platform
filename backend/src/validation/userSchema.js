@@ -48,4 +48,27 @@ const userRegistrationSchema = Joi.object({
     .required(),
 });
 
-export { userRegistrationSchema };
+const changePasswordSchema = Joi.object({
+  currentPassword: Joi.string()
+    .min(10)
+    .max(25)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
+    .messages({
+      "string.min": "password must have at least 10 characters",
+      "string.max": "password must less then 25 characters",
+      "string.pattern.base": "password must have one lowercase, uppercase and digits",
+    })
+    .required(),
+  newPassword: Joi.string()
+    .min(10)
+    .max(25)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/)
+    .messages({
+      "string.min": "password must have at least 10 characters",
+      "string.max": "password must less then 25 characters",
+      "string.pattern.base": "password must have one lowercase, uppercase and digits",
+    })
+    .required(),
+});
+
+export { userRegistrationSchema, changePasswordSchema };

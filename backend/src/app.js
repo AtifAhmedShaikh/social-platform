@@ -6,6 +6,7 @@ import authRouter from "./routes/auth.routes.js";
 import helmet from "helmet";
 import morgan from "morgan";
 import userRouter from "./routes/user.routes.js";
+import updateAccountRouter from "./routes/updateAccount.routes.js";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(cookieParser());
 // Declare app routes
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/update-account", updateAccountRouter);
 
 // Handle not found routes
 app.use((req, res) => {

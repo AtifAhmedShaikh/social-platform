@@ -3,7 +3,7 @@ import {
   createUserRefreshTokenInDatabase,
   deleteUserRefreshTokenFromDatabase,
 } from "../services/tokens.service.js";
-import { createUser, findUserById } from "../services/user.service.js";
+import { createUser, findUserById, isUserExists } from "../services/user.service.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -14,21 +14,17 @@ import { REFRESH_TOKEN_SECRET } from "../config/envConfig.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, username, email, password, bio } = req.body;
-  if (!name || !username || !email || !password || !bio) {
-    throw new ApiError(400, "fields are required");
-  }
-  const existedUser = await UserModel.findOne({
-    $or: [{ username, email }],
-  });
+
   // If user email or username is already exist in database
+  const existedUser = await isUserExists(username, email);
   if (existedUser) {
     throw new ApiError(400, "username or email is already exists");
   }
+  // optionally extract Images local path if user uploaded
   const avatarLocalPath = req.files?.avatar[0]?.path;
   const coverImageLocalPath = req.files?.coverImage[0]?.path;
-  // If avatar or coverImage are not provided by user
   if (!avatarLocalPath || !coverImageLocalPath) {
-    throw new ApiError(400, "avatar and coverImage both are required !");
+    throw new ApiError(400, "avatar and coverImage are required");
   }
   // upload avatar and coverImage on cloudinary
   const avatar = await uploadOnCloudinary(avatarLocalPath);
@@ -43,7 +39,6 @@ const registerUser = asyncHandler(async (req, res) => {
     avatar: avatar.secure_url,
     coverImage: coverImage.secure_url,
   });
-  console.log(createdUser);
   const responseInstance = new ApiResponse(
     201,
     { user: createdUser },
@@ -55,7 +50,6 @@ const registerUser = asyncHandler(async (req, res) => {
 // login user basis on username or email
 const loginUser = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
-
   const user = await UserModel.findOne({ $or: [{ username }, { email: username }] }).select(
     "+password",
   );
