@@ -8,25 +8,14 @@ import ApiError from "../utils/ApiError.js";
  */
 export const validateData = schema => {
   return (req, res, next) => {
-    const { name, username, email, password, bio } = req.body;
-    const validate = schema.validate({ name, username, email, password, bio });
-    // optionally extract Images local path if user uploaded
-    const avatar = req.files?.avatar[0]?.path;
-    const coverImage = req.files?.coverImage[0]?.path;
-    // check avatar and coverImage are uploaded
-    if (!avatar || !coverImage) {
-      throw new ApiError(400, "avatar and coverImage are required");
-    }
+    const validate = schema.validate(req.body);
     // Check if validation Error
     if (validate?.error) {
       const validationErrorMessage = validate?.error?.details[0]?.message || "Enter valid data !";
       throw new ApiError(400, validationErrorMessage);
     } else {
-      // Attach data and  avatar, coverImage in request
+      // Attach data in request
       req.body = validate.value;
-      req.avatar = avatar;
-      req.coverImage = coverImage;
-      console.log("Every thing fine next:");
       return next(); // control pass the next controller
     }
   };
