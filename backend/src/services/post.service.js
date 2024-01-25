@@ -43,12 +43,35 @@ const lookupToPostCreator = {
   },
 };
 
+const lookupToGetLikeCount = {
+  $lookup: {
+    from: "likes",
+    foreignField: "post",
+    localField: "_id",
+    as: "likeCount",
+  },
+};
+
+const lookupToGetCommentCount = {
+  $lookup: {
+    from: "comments",
+    foreignField: "post",
+    localField: "_id",
+    as: "commentCount",
+  },
+};
 // attach additional fields in document
 const attachFieldsInDocuments = {
   $addFields: {
     creator: { $first: "$creator" },
     configuration: {
       $first: "$configuration",
+    },
+    likeCount: {
+      $size: "$likeCount",
+    },
+    commentCount: {
+      $size: "$commentCount",
     },
   },
 };
@@ -58,6 +81,8 @@ export const findPosts = async () => {
   return await PostModel.aggregate([
     lookupToPostCreator,
     lookupToPostConfiguration,
+    lookupToGetLikeCount,
+    lookupToGetCommentCount,
     attachFieldsInDocuments,
   ]);
 };
