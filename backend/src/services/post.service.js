@@ -18,6 +18,7 @@ const lookupToPostConfiguration = {
           allowComments: 1,
           allowSharing: 1,
           allowSaving: 1,
+          _id: 0,
         },
       },
     ],
@@ -60,34 +61,41 @@ const lookupToGetCommentCount = {
     as: "commentCount",
   },
 };
-// attach additional fields in document
-const attachFieldsInDocuments = {
-  $addFields: {
-    creator: { $first: "$creator" },
-    configuration: {
-      $first: "$configuration",
-    },
-    likeCount: {
-      $size: "$likeCount",
-    },
-    commentCount: {
-      $size: "$commentCount",
-    },
-  },
-};
 
 // retrieve all posts from database with creator and config Info using Aggregation pipelines
-export const findPosts = async () => {
+export const findPosts = async currentUserId => {
   return await PostModel.aggregate([
     lookupToPostCreator,
     lookupToPostConfiguration,
     lookupToGetLikeCount,
     lookupToGetCommentCount,
-    attachFieldsInDocuments,
+    {
+      $addFields: {
+        creator: { $first: "$creator" },
+        configuration: {
+          $first: "$configuration",
+        },
+        likeCount: {
+          $size: "$likeCount",
+        },
+        commentCount: {
+          $size: "$commentCount",
+        },
+        isLiked: {
+          $cond: {
+            if: {
+              $in: [new mongoose.Types.ObjectId(currentUserId), "$likeCount.likedBy"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
   ]);
 };
 
-export const findPostById = async postId => {
+export const findPostById = async (postId, currentUserId) => {
   return await PostModel.aggregate([
     {
       $match: {
@@ -96,7 +104,29 @@ export const findPostById = async postId => {
     },
     lookupToPostConfiguration,
     lookupToPostCreator,
-    attachFieldsInDocuments,
+    {
+      $addFields: {
+        creator: { $first: "$creator" },
+        configuration: {
+          $first: "$configuration",
+        },
+        likeCount: {
+          $size: "$likeCount",
+        },
+        commentCount: {
+          $size: "$commentCount",
+        },
+        isLiked: {
+          $cond: {
+            if: {
+              $in: [new mongoose.Types.ObjectId(currentUserId), "$likeCount.likedBy"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
   ]);
 };
 

@@ -10,7 +10,8 @@ import ApiResponse from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 
 const getPosts = asyncHandler(async (req, res) => {
-  const posts = await findPosts();
+  const userId = req.user?._id;
+  const posts = await findPosts(userId);
   if (!posts?.length) {
     throw new ApiError(404, "posts does not exists !");
   }
@@ -20,7 +21,8 @@ const getPosts = asyncHandler(async (req, res) => {
 
 const getPostById = asyncHandler(async (req, res) => {
   const postId = req.params.id;
-  const post = await findPostById(postId);
+  const userId = req.user?._id;
+  const post = await findPostById(postId, userId);
   if (!post) {
     throw new ApiError(404, "post not found !");
   }
