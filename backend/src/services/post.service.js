@@ -26,23 +26,6 @@ const lookupToPostConfiguration = {
 };
 
 // lookup to get post creator of post
-const lookupToPostCreator = {
-  $lookup: {
-    from: "users",
-    localField: "creator",
-    foreignField: "_id",
-    as: "creator",
-    pipeline: [
-      {
-        $project: {
-          name: 1,
-          username: 1,
-          avatar: 1,
-        },
-      },
-    ],
-  },
-};
 
 const lookupToGetLikeCount = {
   $lookup: {
@@ -65,7 +48,35 @@ const lookupToGetCommentCount = {
 // retrieve all posts from database with creator and config Info using Aggregation pipelines
 export const findPosts = async currentUserId => {
   return await PostModel.aggregate([
-    lookupToPostCreator,
+    {
+      $lookup: {
+        from: "users",
+        localField: "creator",
+        foreignField: "_id",
+        as: "creator",
+        pipeline: [
+          {
+            $project: {
+              name: 1,
+              username: 1,
+              avatar: 1,
+              _id: 1,
+            },
+          },
+          {
+            $addFields: {
+              isUploadedByMe: {
+                $cond: {
+                  if: { $eq: ["$_id", new mongoose.Types.ObjectId(currentUserId)] },
+                  then: true,
+                  else: false,
+                },
+              },
+            },
+          },
+        ],
+      },
+    },
     lookupToPostConfiguration,
     lookupToGetLikeCount,
     lookupToGetCommentCount,
@@ -92,6 +103,12 @@ export const findPosts = async currentUserId => {
         },
       },
     },
+    {
+      $project: {
+        __v: 0,
+        updatedAt: 0,
+      },
+    },
   ]);
 };
 
@@ -103,7 +120,37 @@ export const findPostById = async (postId, currentUserId) => {
       },
     },
     lookupToPostConfiguration,
-    lookupToPostCreator,
+    {
+      $lookup: {
+        from: "users",
+        localField: "creator",
+        foreignField: "_id",
+        as: "creator",
+        pipeline: [
+          {
+            $project: {
+              name: 1,
+              username: 1,
+              avatar: 1,
+              _id: 1,
+            },
+          },
+          {
+            $addFields: {
+              isUploadedByMe: {
+                $cond: {
+                  if: { $eq: ["$_id", new mongoose.Types.ObjectId(currentUserId)] },
+                  then: true,
+                  else: false,
+                },
+              },
+            },
+          },
+        ],
+      },
+    },
+    lookupToGetLikeCount,
+    lookupToGetCommentCount,
     {
       $addFields: {
         creator: { $first: "$creator" },
@@ -125,6 +172,12 @@ export const findPostById = async (postId, currentUserId) => {
             else: false,
           },
         },
+      },
+    },
+    {
+      $project: {
+        __v: 0,
+        updatedAt: 0,
       },
     },
   ]);

@@ -23,16 +23,16 @@ const getPostById = asyncHandler(async (req, res) => {
   const postId = req.params.id;
   const userId = req.user?._id;
   const post = await findPostById(postId, userId);
-  if (!post) {
+  if (!post?.length) {
     throw new ApiError(404, "post not found !");
   }
-  const responseInstance = new ApiResponse(200, { post }, "posts are fetched successfully");
+  const responseInstance = new ApiResponse(200, { post: post[0] }, "posts are fetched successfully");
   res.status(200).json(responseInstance);
 });
 
 const createPost = asyncHandler(async (req, res) => {
   const userId = req.user._id; // loggedIn user Id
-  // extract post data from request, middleware attach postData after validation
+  // extract post data from request, middleware has attached postData in body after validation
   const postData = req.body;
   const postImageLocalPath = req.file?.path;
   if (!postImageLocalPath) {
