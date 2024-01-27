@@ -33,7 +33,7 @@ export const isAuthorizedToDelete = deletingDocumentType => {
       if (String(post?.creator) === String(userId)) return next(); // user is deleting own document
       throw new ApiError(
         401,
-        `unauthorized to delete the ! ${deletingDocumentType?.toLowerCase()}`,
+        `you unauthorized to delete this ${deletingDocumentType?.toLowerCase()}`,
       );
     } else if (deletingDocumentType === "REEL") {
     }
