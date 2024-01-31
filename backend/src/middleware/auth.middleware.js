@@ -1,6 +1,7 @@
 import { ACCESS_TOKEN_SECRET } from "../config/envConfig.js";
 import { findPostById } from "../services/post.service.js";
 import { findTweetById } from "../services/tweet.service.js";
+import { findReelById } from "../services/reel.service.js";
 import { findUserById } from "../services/user.service.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -14,7 +15,7 @@ export const authenticateUser = asyncHandler(async (req, res, next) => {
     if (!token) {
       throw new ApiError(401, "unauthorized request, token not found !");
     }
-    const decoded =await Jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const decoded = await Jwt.verify(token, ACCESS_TOKEN_SECRET);
     console.log(decoded);
     // fetch the user from the database based on the decoded user ID
     const user = await findUserById(decoded?._id);
@@ -54,6 +55,19 @@ export const isAuthorizedToDelete = deletingDocumentType => {
       }
       // check the tweet creator is current user or not, convert mongoose ObjectId into string
       if (String(tweetToBeDeleted?.author?._id) === String(userId)) {
+        return next(); // pass control into next handler
+      }
+      throw new ApiError(
+        401,
+        `you unauthorized to delete this ${deletingDocumentType?.toLowerCase()}`,
+      );
+    } else if (deletingDocumentType === "REEL") {
+      const reelToBeDeleted = await findReelById(documentId);
+      if (!reelToBeDeleted) {
+        throw new ApiError(404, "tweet not found, Invalid post Id");
+      }
+      // check the reel creator is current user or not, convert mongoose ObjectId into string
+      if (String(reelToBeDeleted?.creator?._id) === String(userId)) {
         return next(); // pass control into next handler
       }
       throw new ApiError(
