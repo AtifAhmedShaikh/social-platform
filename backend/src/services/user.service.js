@@ -22,6 +22,11 @@ export const isUserExists = async (username, email) => {
   });
 };
 
+// find the user by email or username and select with password
+export const findUserByUsernameOrEmail = async (username, email) => {
+  return await UserModel.findOne({ $or: [{ username }, { email }] }).select("+password");
+};
+
 export const findUserAndUpdate = async (condition, updatedDetails) => {
   return await UserModel.findOneAndUpdate(condition, updatedDetails, { new: true });
 };
