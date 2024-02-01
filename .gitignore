@@ -76,6 +76,11 @@ web_modules/
 *.jpg
 *.jpeg
 *.png
+*.mp3
+*.mp4
+*.mov
+*.avi
+*.gif
 .env
 .env.development.local
 .env.test.local
