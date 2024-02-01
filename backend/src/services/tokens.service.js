@@ -1,35 +1,33 @@
 import TokenModel from "../models/Token.model.js";
 import UserModel from "../models/User.model.js";
 /**
- * @param {string} userId - current user ID who is login or register
- * Generate access and refresh token using custom  methods of user schema
- * create new document in tokens collection
- * save refresh token with associated this user ID
- * return both tokens for saving in cookies
+ * Generate access and refresh token for given user Id
+ * Checks if a refresh token already exists in the database for the user.
+ * If a token exists, it updates the existing token, otherwise it creates a new one.
  */
-export const createUserRefreshTokenInDatabase = async userId => {
+
+export const generateAccessAndRefreshToken = async userId => {
   const user = await UserModel.findById(userId);
-  if (!userId) return null;
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
-  const createdRefreshToken = await TokenModel.create({
-    userId,
-    token: refreshToken,
-  });
-  console.log(createdRefreshToken);
+  // Check if a refresh token already exists for the user
+  const existedToken = await TokenModel.findOne({ userId });
+  if (existedToken) {
+    // Update the existing refresh token in the database
+    await TokenModel.updateOne({ userId }, { token: refreshToken });
+  } else {
+    // Create a new entry for the refresh token in the database
+    await TokenModel.create({
+      userId,
+      token: refreshToken,
+    });
+  }
   return { accessToken, refreshToken };
 };
 
-// delete user refresh token from database
-export const deleteUserRefreshTokenFromDatabase = async userId => {
-  return await TokenModel.deleteOne({ userId });
-};
-
-export const updateRefreshTokenInDatabase = async (userId, newToken) => {
-  const updated = await TokenModel.updateOne(
-    { userId },
-    { $set: { token: newToken } },
-    { new: true },
-  );
-  return updated;
+// Delete the refresh token associated with the provided user ID
+export const deleteRefreshTokenFromDatabase = async userId => {
+  const deletionResult = await TokenModel.deleteOne({ userId });
+  // Return true if the refresh token is successfully deleted, false otherwise
+  return deletionResult.deletedCount > 0;
 };
