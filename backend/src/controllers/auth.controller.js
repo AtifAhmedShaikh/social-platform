@@ -101,7 +101,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, "unauthorized request,refresh token has been expired !");
   }
   // generate access and refresh and update previous refresh token in database
-  const { accessToken, refreshToken } = generateAccessAndRefreshToken(user?._id);
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user?._id);
   const responseInstance = new ApiResponse(200, {}, "access token has refreshed ");
   res.cookie("accessToken", accessToken, cookieOptions);
   res.cookie("refreshToken", refreshToken, cookieOptions);
