@@ -3,7 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import UserModel from "../models/User.model.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
-import { findUserAndUpdate, isUserExists } from "../services/user.service.js";
+import { findUserAndUpdate, findUserByUsernameOrEmail } from "../services/user.service.js";
 
 const changeCurrentUserPassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
@@ -18,9 +18,10 @@ const changeCurrentUserPassword = asyncHandler(async (req, res) => {
   if (!isValidPassword) {
     throw new ApiError(400, "Invalid current password");
   }
-  const updatedUser = await findUserAndUpdate({ _id: userId }, { $set: { password: newPassword } });
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
 
-  const responseInstance = new ApiResponse(200, { updatedUser }, "password changes successfully");
+  const responseInstance = new ApiResponse(200, { }, "password changes successfully");
   res.status(200).json(responseInstance);
 });
 
@@ -28,7 +29,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   const { name, username, email, bio } = req.body;
   const userId = req.user?._id;
   // check provided username or email is not exists already
-  const existedUser = await isUserExists(username, email);
+  const existedUser = await findUserByUsernameOrEmail(username, email);
   // If loggedIn user and existedUser are same, means existedUser is current user document
   if (existedUser && existedUser?._id !== userId) {
     throw new ApiError(400, "username or email is already exists");
