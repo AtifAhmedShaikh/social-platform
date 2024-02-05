@@ -5,13 +5,13 @@ const followSchema = new mongoose.Schema(
     // user who is following this below user
     follower: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      ref: "user",
       required: true,
     },
     // user who get new follower
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      ref: "user",
       required: true,
     },
   },
