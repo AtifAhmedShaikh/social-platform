@@ -1,7 +1,5 @@
 import express from "express";
 import { authenticateUser, isAuthorizedToDelete } from "../middleware/auth.middleware.js";
-import { validateData } from "../middleware/validation.middleware.js";
-import { createTweetSchema } from "../validation/postSchema.js";
 import {
   createTweet,
   deleteTweetById,
@@ -14,12 +12,12 @@ const router = express.Router();
 
 router.use(authenticateUser);
 
-router.route("/all").get(getTweets);
+router.route("/").get(getTweets);
 router
   .route("/:id")
   .get(getTweetById)
   .put(updateTweet)
   .delete(isAuthorizedToDelete("TWEET"), deleteTweetById);
-router.route("/create").post(validateData(createTweetSchema), createTweet); // validate data before creating new tweet
+router.route("/create").post(createTweet); // validate data before creating new tweet
 
 export default router;

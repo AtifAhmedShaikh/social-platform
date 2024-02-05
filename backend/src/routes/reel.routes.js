@@ -13,11 +13,11 @@ import { createReelSchema } from "../validation/postSchema.js";
 const router = express.Router();
 
 router.use(authenticateUser);
-router.route("/all").get(getReels);
+
+router.route("/").get(getReels);
+router.route("/:id").get(getReelById).delete(isAuthorizedToDelete("REEL"), deleteReelById);
 router
   .route("/create")
   .post(upload.single("reelVideo"), validateData(createReelSchema), createReel);
-router.route("/delete/:id").delete(isAuthorizedToDelete("REEL"), deleteReelById);
-router.route("/:id").get(getReelById);
 
 export default router;
