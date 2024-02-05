@@ -9,11 +9,7 @@ import {
   generateAccessAndRefreshToken,
   deleteRefreshTokenFromDatabase,
 } from "../services/tokens.service.js";
-import {
-  createUser,
-  findUserById,
-  findUserByUsernameOrEmail,
-} from "../services/user.service.js";
+import { createUser, findUserById, findUserByUsernameOrEmail } from "../services/user.service.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, username, email, password, bio } = req.body;
@@ -97,6 +93,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   // verify refresh token using JWT and get userId from decoded Information and find the User
   const decoded = Jwt.verify(refreshTokenInCookies, REFRESH_TOKEN_SECRET);
   const user = await findUserById(decoded?._id);
+  console.log(user);
   if (!user) {
     throw new ApiError(401, "unauthorized request,refresh token has been expired !");
   }
