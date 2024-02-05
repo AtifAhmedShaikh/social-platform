@@ -1,4 +1,4 @@
-import { createUserTweet, findTweetById, findTweets } from "../services/tweet.service.js";
+import { findTweetById, findTweets } from "../services/tweet.service.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -26,11 +26,19 @@ const getTweetById = asyncHandler(async (req, res) => {
   res.status(200).json(responseInstance);
 });
 
+// create new Tweet document in database using custom method
 const createTweet = asyncHandler(async (req, res) => {
+  const { content, ...tweetConfig } = req.body;
+  if (!content?.trim()) {
+    throw new ApiError(404, "Tweet content are required ");
+  }
   const userId = req.user?._id;
-  const tweetData = req.body;
-  const tweet = await createUserTweet({ ...tweetData, userId });
-  const responseInstance = new ApiResponse(201, { tweet }, "tweet created successfully!");
+  const createdTweet = await TweetModel.createTweet({ content, author: userId, ...tweetConfig });
+  const responseInstance = new ApiResponse(
+    201,
+    { tweet: createdTweet },
+    "tweet created successfully!",
+  );
   res.status(201).json(responseInstance);
 });
 
