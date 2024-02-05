@@ -1,5 +1,5 @@
-/* eslint-disable no-undef */
 import dotenv from "dotenv";
+import process from "node:process";
 
 dotenv.config({
   path: ".env",
@@ -34,4 +34,3 @@ export {
   CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET,
 };
-// mongodb+srv://atifahmed19:myJsCode19@cluster0.ytfhno1.mongodb.net/snapNewsData?retryWrites=true&w=majority
