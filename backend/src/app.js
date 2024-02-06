@@ -13,6 +13,7 @@ import commentRouter from "./routes/comment.routes.js";
 import tweetRouter from "./routes/tweet.routes.js";
 import reelRouter from "./routes/reel.routes.js";
 import followRouter from "./routes/Follow.routes.js";
+import userGalleryRouter from "./routes/userGallery.routes.js";
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/v1/comments", commentRouter);
 app.use("/api/v1/tweets", tweetRouter);
 app.use("/api/v1/reels", reelRouter);
 app.use("/api/v1/follow", followRouter);
+app.use("/api/v1/gallery", userGalleryRouter);
 
 // Handle not found routes
 app.use((req, res) => {
