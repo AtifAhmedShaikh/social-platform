@@ -2,6 +2,9 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../config/envConfig.js";
 import Jwt from "jsonwebtoken";
+import GalleryModel from "./UserGallery.model.js";
+import ApiError from "../utils/ApiError.js";
+import UserHistory from "../models/UserHistory.model.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -56,7 +59,34 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-// check the  given plainTextPassword from hashed from using bcrypt
+// middleware for the user schema to automatically create a corresponding gallery document
+userSchema.post("save", async function (docs, next) {
+  try {
+    // create a new gallery document and link it to the user by attaching the user ID
+    const createdGallery = await GalleryModel.create({
+      user: docs._id,
+    });
+    console.log(createdGallery);
+    next();
+  } catch (error) {
+    throw new ApiError(500, "something went wrong while creating Gallery Document of user ");
+  }
+});
+
+// middleware for the user schema to automatically create a corresponding history document
+userSchema.post("save", async function (docs, next) {
+  try {
+    const createdHistory = await UserHistory.create({
+      owner: docs._id, // attach user Id
+    });
+    console.log(createdHistory);
+    next();
+  } catch (error) {
+    throw new ApiError(500, "something went wrong while creating User History Document of user ");
+  }
+});
+
+// method to check provided plain text password with the hashed password by using bcrypt
 userSchema.methods.isCorrectPassword = async function (plainTextPassword) {
   try {
     return await bcrypt.compare(plainTextPassword, this.password);
