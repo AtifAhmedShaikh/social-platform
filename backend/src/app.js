@@ -14,6 +14,8 @@ import tweetRouter from "./routes/tweet.routes.js";
 import reelRouter from "./routes/reel.routes.js";
 import followRouter from "./routes/Follow.routes.js";
 import userGalleryRouter from "./routes/userGallery.routes.js";
+import userHistoryRouter from "./routes/userHistory.routes.js";
+import likedUsersListRouter from "./routes/likedUsersList.routes.js";
 
 const app = express();
 
@@ -37,6 +39,8 @@ app.use("/api/v1/tweets", tweetRouter);
 app.use("/api/v1/reels", reelRouter);
 app.use("/api/v1/follow", followRouter);
 app.use("/api/v1/gallery", userGalleryRouter);
+app.use("/api/v1/history", userHistoryRouter);
+app.use("/api/v1/liked-users", likedUsersListRouter);
 
 // Handle not found routes
 app.use((req, res) => {
