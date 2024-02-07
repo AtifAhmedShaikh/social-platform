@@ -26,6 +26,10 @@ const togglePostInUserGallery = asyncHandler(async (req, res) => {
   if (!targetedPost) {
     throw new ApiError(404, "post not found, Invalid post Id");
   }
+  // Ensure the post has allow to save
+  if (!targetedPost?.configuration?.allowSaving) {
+    throw new ApiError(401, "post does not allow to save");
+  }
   const isAlreadyInGallery = await GalleryModel.findOne({
     user: userId,
     posts: { $in: [targetedPost._id] },
@@ -51,6 +55,10 @@ const toggleReelInUserGallery = asyncHandler(async (req, res) => {
   if (!targetedReel) {
     throw new ApiError(404, "reel not found, Invalid reel Id");
   }
+  // Ensure the reel has allow to save
+  if (!targetedReel?.configuration?.allowSaving) {
+    throw new ApiError(401, "reel does not allow to save");
+  }
   const isAlreadyInGallery = await GalleryModel.findOne({
     user: userId,
     reels: { $in: [targetedReel._id] },
@@ -75,6 +83,10 @@ const toggleTweetInUserGallery = asyncHandler(async (req, res) => {
   const targetedTweet = await findTweetById(tweetId); // targeted tweet to add or remove from gallery
   if (!targetedTweet) {
     throw new ApiError(404, "tweet not found, Invalid tweet Id");
+  }
+  // Ensure the tweet has allow to save
+  if (!targetedTweet?.configuration?.allowSaving) {
+    throw new ApiError(401, "tweet does not allow to save");
   }
   const isAlreadyInGallery = await GalleryModel.findOne({
     user: userId,
