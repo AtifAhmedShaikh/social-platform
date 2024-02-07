@@ -38,6 +38,7 @@ PostModel.createPost = async function (postData) {
     isPublic: postData.isPublic ?? true,
     displayLikeCount: postData.displayLikeCount ?? true,
     allowSaving: postData.allowSaving ?? true,
+    allowComments: postData.allowComments ?? true,
     allowSharing: postData.allowSharing ?? true,
   });
   return createdPost;
