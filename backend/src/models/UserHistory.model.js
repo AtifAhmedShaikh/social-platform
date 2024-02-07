@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-// model to user history of tracking to save any post,tweet or reels
+
+// model to track user like history of posts,reels,tweets and as well as reelWatchHistory
 const historySchema = new mongoose.Schema(
   {
     owner: {
@@ -7,6 +8,12 @@ const historySchema = new mongoose.Schema(
       ref: "users",
       required: true,
     },
+    reelsWatchHistory: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "reels",
+      },
+    ],
     reels: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -22,7 +29,7 @@ const historySchema = new mongoose.Schema(
     posts: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "tweets",
+        ref: "tweet",
       },
     ],
   },
