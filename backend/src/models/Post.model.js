@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import ContentConfiguration from "./ContentConfig.model.js";
+import LikeModel from "../models/Like.model.js";
+import CommentModel from "../models/Comment.model.js";
 
 const postSchema = new mongoose.Schema(
   {
@@ -44,10 +46,12 @@ PostModel.createPost = async function (postData) {
   return createdPost;
 };
 
-// delete the post by ID and a corresponding content config document as well
+// delete the post by ID and delete their corresponding content documents as well
 PostModel.deletePostById = async function (postId) {
   await this.findByIdAndDelete(postId);
   await ContentConfiguration.deleteOne({ postId });
+  await LikeModel.deleteMany({ post: postId });
+  await CommentModel.deleteMany({ post: postId });
 };
 
 export default PostModel;

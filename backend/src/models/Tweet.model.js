@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import ContentConfiguration from "./ContentConfig.model.js";
+import LikeModel from "../models/Like.model.js";
+import CommentModel from "../models/Comment.model.js";
 // model to user history of tracking to save any post,tweet or reels
 const tweetSchema = new mongoose.Schema(
   {
@@ -37,6 +39,13 @@ TweetModel.createTweet = async function (tweetData) {
     allowSharing: tweetData.allowSharing ?? true,
   });
   return createdTweet;
+};
+
+TweetModel.deleteTweetById = async function (tweetId) {
+  await this.findByIdAndDelete(tweetId);
+  await ContentConfiguration.deleteOne({ tweetId });
+  await LikeModel.deleteMany({ tweet: tweetId });
+  await CommentModel.deleteMany({ tweet: tweetId });
 };
 
 export default TweetModel;
