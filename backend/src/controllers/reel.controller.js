@@ -30,8 +30,8 @@ const createReel = asyncHandler(async (req, res) => {
   const { caption, ...reelConfig } = req.body;
   const userId = req.user?._id;
   const reelVideoFileLocalPath = req.file?.path;
-  if (!reelVideoFileLocalPath) {
-    throw new ApiError(400, "please upload video of reel ");
+  if (!reelVideoFileLocalPath||!caption?.trim()) {
+    throw new ApiError(400, "please upload video and write caption ");
   }
   const reelVideo = await uploadOnCloudinary(reelVideoFileLocalPath);
   const createdReel = await ReelModel.createReel({
@@ -50,7 +50,7 @@ const createReel = asyncHandler(async (req, res) => {
 
 const deleteReelById = asyncHandler(async (req, res) => {
   const reelId = req.params.id;
-  await ReelModel.findByIdAndDelete(reelId);
+  await ReelModel.deleteReelById(reelId);
   const responseInstance = new ApiResponse(200, "reel has deleted successfully");
   res.status(200).json(responseInstance);
 });

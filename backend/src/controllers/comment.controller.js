@@ -5,6 +5,7 @@ import ApiError from "../utils/ApiError.js";
 import { findPostById, findPostComments } from "../services/post.service.js";
 import { findReelById, findReelComments } from "../services/reel.service.js";
 import { findTweetById, findTweetComments } from "../services/tweet.service.js";
+import LikeModel from "../models/Like.model.js";
 
 const addCommentOnPost = asyncHandler(async (req, res) => {
   const postId = req.params?.id;
@@ -104,6 +105,7 @@ const updateComment = asyncHandler(async (req, res) => {
 const deleteComment = asyncHandler(async (req, res) => {
   const commentId = req.params.id;
   const deletedComment = await CommentModel.findByIdAndDelete(commentId);
+  await LikeModel.deleteMany({ comment: commentId }); // delete comment corresponding likes
   const responseInstance = new ApiResponse(
     200,
     { deletedComment },

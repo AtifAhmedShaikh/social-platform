@@ -1,8 +1,6 @@
 import {
   findPosts,
   findPostById,
-  // createUserPost,
-  // deletePostById,
 } from "../services/post.service.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
@@ -37,7 +35,7 @@ const createPost = asyncHandler(async (req, res) => {
   const postImageLocalPath = req.file?.path;
   // post must have Image and caption
   if (!postImageLocalPath || !caption?.trim()) {
-    throw new ApiError(400, "upload Image for post");
+    throw new ApiError(400, "upload post Image and write caption ");
   }
   // upload Image on cloudinary and get secure url of Image
   const postImage = await uploadOnCloudinary(postImageLocalPath);

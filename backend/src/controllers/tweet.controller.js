@@ -29,9 +29,6 @@ const getTweetById = asyncHandler(async (req, res) => {
 // create new Tweet document in database using custom method
 const createTweet = asyncHandler(async (req, res) => {
   const { content, ...tweetConfig } = req.body;
-  if (!content?.trim()) {
-    throw new ApiError(404, "Tweet content are required ");
-  }
   const userId = req.user?._id;
   const createdTweet = await TweetModel.createTweet({ content, author: userId, ...tweetConfig });
   const responseInstance = new ApiResponse(
@@ -52,7 +49,7 @@ const updateTweet = asyncHandler(async (req, res) => {
 
 const deleteTweetById = asyncHandler(async (req, res) => {
   const tweetId = req.params.id;
-  await TweetModel.findByIdAndDelete(tweetId);
+  await TweetModel.deleteTweetById(tweetId);
   const responseInstance = new ApiResponse(200, {}, "tweet deleted successfully!");
   res.status(200).json(responseInstance);
 });
