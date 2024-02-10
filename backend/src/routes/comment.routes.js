@@ -1,5 +1,7 @@
 import express from "express";
-import { authenticateUser, isAuthorizedToDelete } from "../middleware/auth.middleware.js";
+import { authenticateUser } from "../middleware/auth.middleware.js";
+import { isAuthorizedToCommentModification } from "../middleware/authZ.middleware.js";
+import { validateData } from "../middleware/validation.middleware.js";
 import {
   getReelComments,
   getPostComments,
@@ -10,14 +12,20 @@ import {
   updateComment,
   deleteComment,
 } from "../controllers/comment.controller.js";
-
+import { commentSchema } from "../validation/contentSchema.js";
 const router = express.Router();
 
 router.use(authenticateUser);
 
-router.route("/post/:id").get(getPostComments).post(addCommentOnPost);
-router.route("/reel/:id").get(getReelComments).post(addCommentOnReel);
-router.route("/tweet/:id").get(getTweetComments).post(addCommentOnTweet);
-router.route("/:id").put(updateComment).delete(isAuthorizedToDelete("COMMENT"), deleteComment);
+router.route("/post/:id").get(getPostComments).post(validateData(commentSchema), addCommentOnPost);
+router.route("/reel/:id").get(getReelComments).post(validateData(commentSchema), addCommentOnReel);
+router
+  .route("/tweet/:id")
+  .get(getTweetComments)
+  .post(validateData(commentSchema), addCommentOnTweet);
+router
+  .route("/:id")
+  .put(isAuthorizedToCommentModification, validateData(commentSchema), updateComment)
+  .delete(isAuthorizedToCommentModification, deleteComment);
 
 export default router;

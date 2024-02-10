@@ -1,6 +1,6 @@
 import express from "express";
-import { authenticateUser, isAuthorizedToDelete } from "../middleware/auth.middleware.js";
-import { validateData } from "../middleware/validation.middleware.js";
+import { authenticateUser } from "../middleware/auth.middleware.js";
+import { isAuthorizedToReelModification } from "../middleware/authZ.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 import {
   createReel,
@@ -8,16 +8,15 @@ import {
   getReels,
   getReelById,
 } from "../controllers/reel.controller.js";
-import { createReelSchema } from "../validation/postSchema.js";
 
 const router = express.Router();
 
 router.use(authenticateUser);
 
 router.route("/").get(getReels);
-router.route("/:id").get(getReelById).delete(isAuthorizedToDelete("REEL"), deleteReelById);
+router.route("/:id").get(getReelById).delete(isAuthorizedToReelModification, deleteReelById);
 router
   .route("/create")
-  .post(upload.single("reelVideo"), validateData(createReelSchema), createReel);
+  .post(upload.single("reelVideo"), createReel);
 
 export default router;

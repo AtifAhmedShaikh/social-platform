@@ -1,5 +1,6 @@
 import express from "express";
-import { authenticateUser, isAuthorizedToDelete } from "../middleware/auth.middleware.js";
+import { authenticateUser } from "../middleware/auth.middleware.js";
+import { isAuthorizedToTweetModification } from "../middleware/authZ.middleware.js";
 import {
   createTweet,
   deleteTweetById,
@@ -7,6 +8,8 @@ import {
   getTweets,
   updateTweet,
 } from "../controllers/tweet.controller.js";
+import { validateData } from "../middleware/validation.middleware.js";
+import { tweetSchema } from "../validation/contentSchema.js";
 
 const router = express.Router();
 
@@ -16,8 +19,8 @@ router.route("/").get(getTweets);
 router
   .route("/:id")
   .get(getTweetById)
-  .put(updateTweet)
-  .delete(isAuthorizedToDelete("TWEET"), deleteTweetById);
-router.route("/create").post(createTweet); // validate data before creating new tweet
+  .put(isAuthorizedToTweetModification, validateData(tweetSchema), updateTweet)
+  .delete(isAuthorizedToTweetModification, deleteTweetById);
+router.route("/create").post(validateData(tweetSchema), createTweet); // validate data before creating new tweet
 
 export default router;
