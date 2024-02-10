@@ -29,8 +29,8 @@ export const removeFromGallery = async (field, documentIdToAdd, userId) => {
   return updatedGallery;
 };
 
-export const findUserGallery = userId => {
-  return GalleryModel.aggregate([
+export const findUserGallery = async userId => {
+  const galleries = await GalleryModel.aggregate([
     stageToMatchDocumentById("user", userId),
     {
       $lookup: {
@@ -81,4 +81,5 @@ export const findUserGallery = userId => {
       },
     },
   ]);
+  return galleries[0];
 };
