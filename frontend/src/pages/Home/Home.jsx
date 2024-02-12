@@ -1,12 +1,20 @@
-import React from "react"
-import Navbar from "../../components/Navbar/Navbar"
+import React from "react";
+import PostCard from "@/components/Cards/PostCard";
+import Layout from "@/components/Layout/Layout";
 
 const Home = () => {
   return (
     <React.Fragment>
-      <Navbar/>
+      <Layout>
+        <div className="flex flex-col items-center py-10">
+          <PostCard />
+          <PostCard />
+          <PostCard />
+          <PostCard />
+        </div>
+      </Layout>
     </React.Fragment>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
