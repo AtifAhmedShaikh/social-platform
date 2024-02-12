@@ -1,33 +1,39 @@
-import * as React from "react";
-
+import PropTypes from "prop-types";
 import { cn } from "@/lib/utils";
+import React from "react";
 
-const Input = React.forwardRef(
-  ({ className, label, type, error, ...props }, ref) => {
-    return (
-      <>
-        <div className="flex w-full auto flex-col items-start mb-2 h-20">
-          <span className="text-[15px]">{label}</span>
-          <input
-            type={type}
-            className={cn(
-              "block w-full rounded-md border-0 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-2",
-              error && "ring-red-500",
-              className
-            )}
-            ref={ref}
-            {...props}
-          />
-          {error && (
-            <p className="text-red-600 text-[11px] text-left mt-[3px]">
-              This field has required{" "}
-            </p>
+const Input = React.forwardRef(function Form(props, ref) {
+  return (
+    <>
+      <div className="flex w-full auto flex-col items-start mb-2 h-20">
+        <span className="text-[15px] font-bold mb-1">{props.label}</span>
+        <input
+          type={props.type}
+          className={cn(
+            "block w-full rounded-md border-0 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-2",
+            props.error && "ring-red-500",
+            props.className
           )}
-        </div>
-      </>
-    );
-  }
-);
+          {...props}
+          ref={ref}
+        />
+        {props.error && (
+          <p className="text-red-600 font-bold text-[13px] text-left mt-[3px]">
+            {props?.error?.message}
+          </p>
+        )}
+      </div>
+    </>
+  );
+});
+
 Input.displayName = "Input";
+
+Input.propTypes = {
+  label: PropTypes.string,
+  type: PropTypes.string,
+  error: PropTypes.object,
+  className: PropTypes.string,
+};
 
 export { Input };
