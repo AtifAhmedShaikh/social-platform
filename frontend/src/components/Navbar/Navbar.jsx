@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 const Navbar = () => {
   const navigate = useNavigate();
   return (
-    <div className="w-100 h-14 bg-slate-900 shadow-md flex justify-between items-center px-5">
+    <div className="w-100 h-14 bg-slate-900 shadow-md flex justify-between items-center px-5 sticky top-0 z-20">
       <div>
         <img
           className="h-8 w-auto"
@@ -17,7 +17,12 @@ const Navbar = () => {
         <Button variant="primary" onClick={() => navigate("/auth/login")}>
           Login
         </Button>
-        <Button variant="primary" onClick={() => navigate("/auth/signUp")}>
+        <Button
+          variant="primary"
+          onClick={() => {
+            navigate("/auth/signUp");
+          }}
+        >
           SignUp
         </Button>
       </div>
