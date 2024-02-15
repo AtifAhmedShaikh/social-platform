@@ -9,9 +9,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
+import { useSelector, useDispatch } from "react-redux";
+import { openModal, closeModal } from "@/redux/slices/ModalsToggleSlice";
+const DeleteConfirmationModal = () => {
+  const isOpen = useSelector(
+    (state) => state.ModalToggle.deleteConfirmationModal
+  );
+  const dispatch = useDispatch();
   return (
-    <AlertDialog open={isOpen} onClose={onClose}>
+    <AlertDialog
+      open={isOpen}
+      onClose={() => dispatch(openModal("deleteConfirmationModal"))}
+    >
       <AlertDialogTrigger />
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -22,8 +31,16 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Continue</AlertDialogAction>
+          <AlertDialogCancel
+            onClick={() => dispatch(closeModal("deleteConfirmationModal"))}
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => dispatch(closeModal("deleteConfirmationModal"))}
+          >
+            Continue
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
