@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { loginSchema } from "../../schema/authSchema";
+import {Link}from "react-router-dom"
 
 const Login = () => {
   const {
@@ -20,12 +21,12 @@ const Login = () => {
     reset();
   };
   return (
-    <div className="py-0 text-center h-screen">
+    <div className="py-0 text-center h-screen w-100 sm:w-auto">
       <div className="py-5">
         <h2 className="text-4xl">Login your account</h2>
       </div>
       <form
-        className="max-w-md mx-auto h-auto flex justify-start items-center flex-col mt-24"
+        className="sm:max-w-md w-100 mx-auto h-auto   flex justify-center sm:justify-start items-center flex-col mt-24"
         method="post"
         autoComplete="off"
         onSubmit={handleSubmit(submitHandler)}
@@ -44,7 +45,19 @@ const Login = () => {
           placeholder="Enter the password"
           error={errors.password}
         />
-        <div className="flex justify-start w-full">
+        <div className="w-[75%] my-6">
+          <p className="font-bold text-sm text-blue-500 text-start">
+          <Link to="/" className="text-blue-900">
+            Go Back Home
+          </Link>
+          </p>
+          <p className="font-bold text-sm text-blue-500 text-start">{"Don't have an account"}
+          <Link to="/auth/signUp" className=" ml-5 text-blue-900">
+            SignUp Here
+          </Link>
+          </p>
+        </div>
+        <div className="flex justify-start w-[75%] ">
           <Button type="submit" variant="primary">
             Submit
           </Button>

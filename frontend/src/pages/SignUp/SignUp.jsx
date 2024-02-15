@@ -1,10 +1,11 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
+import { Link } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { registerSchema } from "../../schema/authSchema";
+import { registerSchema } from "@/schema/authSchema";
 import { useState } from "react";
-import { convertToFormData } from "../../helpers/convertor.js";
+import { convertToFormData } from "@/helpers/convertor.js";
 const SignUp = () => {
   const [files, setFiles] = useState({ avatar: null, coverImage: null });
   const {
@@ -32,7 +33,7 @@ const SignUp = () => {
   };
 
   return (
-    <div className="py-4 text-center">
+    <div className="py-4 text-center h-screen overflow-y-scroll  mb-20 pb-20  sm:pb-10 sm:mb-0 ">
       <div className="py-5">
         <h2 className="text-4xl">Create a new account</h2>
         <p className="text-sm">
@@ -106,7 +107,20 @@ const SignUp = () => {
           onChange={handleImageFiles}
           required={true}
         />
-        <div className="flex justify-start w-full">
+        <div className="w-[75%] my-6">
+        <p className="font-bold text-sm text-blue-500 text-start">
+          <Link to="/" className="text-blue-900">
+            Go Back Home
+          </Link>
+          </p>
+          <p className="font-bold text-sm text-blue-500 text-start">
+            Already have an account
+            <Link to="/auth/login" className=" ml-5 text-blue-900">
+              Login Here
+            </Link>
+          </p>
+        </div>
+        <div className="flex justify-start  w-[75%]  sm:w-full">
           <Button type="submit" variant="primary">
             Submit
           </Button>
