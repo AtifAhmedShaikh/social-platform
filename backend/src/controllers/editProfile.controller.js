@@ -3,16 +3,14 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import UserModel from "../models/User.model.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
-import { findUserAndUpdate, findUserByUsernameOrEmail } from "../services/user.service.js";
+import UserServices from "../services/user.service.js";
 
 const changeCurrentUserPassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  if (!currentPassword || !newPassword) {
-    throw new ApiError(400, "password fields are required !");
-  }
   const userId = req.user?._id; // extract loggedIn userId from request
-  // fetch user from database with password and validate the password
+  // fetch user from database with password
   const user = await UserModel.findById(userId).select("+password");
+  // validate the user password with provided current password by using custom method
   const isValidPassword = await user.isCorrectPassword(currentPassword);
 
   if (!isValidPassword) {
@@ -21,29 +19,23 @@ const changeCurrentUserPassword = asyncHandler(async (req, res) => {
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
 
-  const responseInstance = new ApiResponse(200, { }, "password changes successfully");
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, {}, "password changes successfully").send(res);
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { name, username, email, bio } = req.body;
+  const { name, username, bio } = req.body;
   const userId = req.user?._id;
-  // check provided username or email is not exists already
-  const existedUser = await findUserByUsernameOrEmail(username, email);
+  // Ensure provided username is not exists already
+  const existedUser = await UserModel.findOne({ username });
   // If loggedIn user and existedUser are same, means existedUser is current user document
-  if (existedUser && existedUser?._id !== userId) {
-    throw new ApiError(400, "username or email is already exists");
+  if (existedUser?._id && String(existedUser?._id) !== String(userId)) {
+    throw new ApiError(400, "username is already exists");
   }
-  const updatedUser = await findUserAndUpdate(
+  const updatedUser = await UserServices.findUserAndUpdate(
     { _id: userId },
-    { $set: { name, username, email, bio } },
+    { name, username, bio },
   );
-  const responseInstance = new ApiResponse(
-    200,
-    { updatedUser },
-    "account has updated successfully ",
-  );
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, { updatedUser }, "account has updated successfully ").send(res);
 });
 
 const changeUserAvatar = asyncHandler(async (req, res) => {
@@ -53,17 +45,16 @@ const changeUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "please upload Image to change the avatar ");
   }
   const avatar = await uploadOnCloudinary(avatarLocalPath);
-  const updatedAvatar = await findUserAndUpdate(
+  const updatedUserDetails = await UserServices.findUserAndUpdate(
     { _id: userId },
-    { $set: { avatar: avatar?.secure_url } },
+    { avatar: avatar?.secure_url },
   );
 
-  const responseInstance = new ApiResponse(
+  new ApiResponse(
     200,
-    { updatedAvatar },
+    { updatedAvatar: updatedUserDetails.avatar },
     "avatar has changed successfully ",
-  );
-  res.status(200).json(responseInstance);
+  ).send(res);
 });
 
 const changeUserCoverImage = asyncHandler(async (req, res) => {
@@ -73,16 +64,16 @@ const changeUserCoverImage = asyncHandler(async (req, res) => {
     throw new ApiError(400, "please upload Image to change the coverImage ");
   }
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  const updatedCoverImage = await findUserAndUpdate(
+  const updatedUserDetails = await UserServices.findUserAndUpdate(
     { _id: userId },
-    { $set: { coverImage: coverImage?.secure_url } },
+    { coverImage: coverImage?.secure_url },
   );
 
-  const responseInstance = new ApiResponse(
+  new ApiResponse(
     200,
-    { updatedCoverImage },
+    { updatedCoverImage: updatedUserDetails.coverImage },
     "coverImage has changed successfully ",
-  );
-  res.status(200).json(responseInstance);
+  ).send(res);
 });
+
 export { changeCurrentUserPassword, updateAccountDetails, changeUserAvatar, changeUserCoverImage };

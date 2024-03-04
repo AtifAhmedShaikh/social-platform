@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
-import ContentConfiguration from "./ContentConfig.model.js";
-import LikeModel from "../models/Like.model.js";
-import CommentModel from "../models/Comment.model.js";
+import castAggregation from "mongoose-cast-aggregation";
+
+mongoose.plugin(castAggregation);
 
 const postSchema = new mongoose.Schema(
   {
-    creator: {
+    owner: {
       // user who is create or upload the post from users
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      ref: "User",
       required: true,
     },
     caption: {
@@ -19,39 +19,41 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // private post only for his followers but public is for everyone
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+    // allow to write comments on post
+    allowComments: {
+      type: Boolean,
+      default: true,
+    },
+    // allow to save the post
+    allowSaving: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,
   },
 );
-const PostModel = mongoose.model("posts", postSchema);
 
-// Define custom method to create new post and a corresponding content config document as well in database
-PostModel.createPost = async function (postData) {
-  // create new post document in database
-  const createdPost = await this.create({
-    creator: postData.creator,
-    postImage: postData.postImage,
-    caption: postData.caption,
+postSchema.pre("aggregate", function (next) {
+  this.project({
+    __v: 0,
+    followers: 0,
+    following: 0,
+    likes: 0,
+    comments: 0,
+    "owner.__v": 0,
+    "owner.updatedAt": 0,
+    "owner.password": 0,
   });
-  // create new  config document for this post, if any config property are not provided its default true
-  await ContentConfiguration.create({
-    postId: createdPost._id, // attach currently created post ID
-    isPublic: postData.isPublic ?? true,
-    displayLikeCount: postData.displayLikeCount ?? true,
-    allowSaving: postData.allowSaving ?? true,
-    allowComments: postData.allowComments ?? true,
-    allowSharing: postData.allowSharing ?? true,
-  });
-  return createdPost;
-};
+  next();
+});
 
-// delete the post by ID and delete their corresponding content documents as well
-PostModel.deletePostById = async function (postId) {
-  await this.findByIdAndDelete(postId);
-  await ContentConfiguration.deleteOne({ postId });
-  await LikeModel.deleteMany({ post: postId });
-  await CommentModel.deleteMany({ post: postId });
-};
+const PostModel = mongoose.model("Post", postSchema);
 
 export default PostModel;

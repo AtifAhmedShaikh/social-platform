@@ -3,15 +3,15 @@ import CommentModel from "../models/Comment.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
-import { findPostById } from "../services/post.service.js";
-import { findReelById } from "../services/reel.service.js";
-import { findTweetById } from "../services/tweet.service.js";
+import PostServices from "../services/post.service.js";
+import TweetServices from "../services/tweet.service.js";
+import ReelServices from "../services/reel.service.js";
 // Toggle controllers for like, if already liked by current user so unlike it otherwise like
 
 const togglePostLike = asyncHandler(async (req, res) => {
   const postId = req.params.id;
   const userId = req.user?._id;
-  const targetedPostToLike = await findPostById(postId, userId);
+  const targetedPostToLike = await PostServices.findPostById(postId);
   if (!targetedPostToLike) {
     throw new ApiError(404, "post not found!, Invalid post Id ");
   }
@@ -21,18 +21,13 @@ const togglePostLike = asyncHandler(async (req, res) => {
   } else {
     await LikeModel.create({ post: postId, likedBy: userId });
   }
-  const responseInstance = new ApiResponse(
-    200,
-    {},
-    `user ${hasLiked ? "unlike" : "Liked"} the post successfully`,
-  );
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, {}, `${hasLiked ? "DisLike " : "Like "} the Post successfully !`).send(res);
 });
 
 const toggleReelLike = asyncHandler(async (req, res) => {
   const reelId = req.params.id;
   const userId = req.user?._id;
-  const targetedReelToLike = await findReelById(reelId, userId);
+  const targetedReelToLike = await ReelServices.findReelById(reelId);
   if (!targetedReelToLike) {
     throw new ApiError(404, "reel not found!, Invalid reel Id ");
   }
@@ -42,18 +37,13 @@ const toggleReelLike = asyncHandler(async (req, res) => {
   } else {
     await LikeModel.create({ reel: reelId, likedBy: userId });
   }
-  const responseInstance = new ApiResponse(
-    200,
-    {},
-    `user ${hasLiked ? "unlike" : "Liked"} the reel successfully`,
-  );
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, {}, `${hasLiked ? "DisLike " : "Like "} the Reel successfully !`).send(res);
 });
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
   const tweetId = req.params.id;
   const userId = req.user?._id;
-  const targetedTweetToLike = await findTweetById(tweetId, userId);
+  const targetedTweetToLike = await TweetServices.findTweetById(tweetId);
   if (!targetedTweetToLike) {
     throw new ApiError(404, "tweet not found!, Invalid tweet Id ");
   }
@@ -64,12 +54,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
   } else {
     await LikeModel.create({ tweet: tweetId, likedBy: userId });
   }
-  const responseInstance = new ApiResponse(
-    200,
-    {},
-    `user ${hasLiked ? "unlike" : "Liked"} the tweet successfully`,
-  );
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, {}, `${hasLiked ? "DisLike " : "Like "} the Tweet successfully !`).send(res);
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
@@ -85,12 +70,9 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   } else {
     await LikeModel.create({ comment: commentId, likedBy: userId });
   }
-  const responseInstance = new ApiResponse(
-    200,
-    {},
-    `user ${hasLiked ? "unlike" : "Liked"} the comment successfully`,
+  new ApiResponse(200, {}, `${hasLiked ? "DisLike" : "Like "} the Comment successfully !`).send(
+    res,
   );
-  res.status(200).json(responseInstance);
 });
 
 export { togglePostLike, toggleCommentLike, toggleTweetLike, toggleReelLike };

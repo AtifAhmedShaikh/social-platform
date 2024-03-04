@@ -2,84 +2,122 @@ import asyncHandler from "../utils/asyncHandler.js";
 import CommentModel from "../models/Comment.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
-import { findPostById, findPostComments } from "../services/post.service.js";
-import { findReelById, findReelComments } from "../services/reel.service.js";
-import { findTweetById, findTweetComments } from "../services/tweet.service.js";
+import ReelServices from "../services/reel.service.js";
+import PostServices from "../services/post.service.js";
+import TweetServices from "../services/tweet.service.js";
 import LikeModel from "../models/Like.model.js";
 
 const addCommentOnPost = asyncHandler(async (req, res) => {
-  const postId = req.params?.id;
-  const userId = req.user?._id;
-  const targetedPostToAddComment = await findPostById(postId, userId);
+  const postId = req.params?.id; // post ID to add a comment
+  const userId = req.user?._id; // loggedIn user ID
+  const { content } = req.body; // content or message of comment
+
+  const targetedPostToAddComment = await PostServices.findPostById(postId);
   if (!targetedPostToAddComment) {
-    throw new ApiError(404, "post not found, Invalid post Id ");
+    throw new ApiError(404, "Post not found, Invalid post Id ");
   }
   // Ensure post has allow to add comments
-  if (!targetedPostToAddComment?.configuration?.allowComments) {
-    throw new ApiResponse(401, {}, "post does not allow comments");
+  if (!targetedPostToAddComment?.allowComments) {
+    throw new ApiError(401, "Post does not allow comments");
   }
-  const { content } = req.body; // content or message of comment
+
   const createdComment = await CommentModel.create({
-    author: userId,
+    owner: userId,
     post: postId,
     content,
   });
-  const responseInstance = new ApiResponse(
-    201,
-    { comment: createdComment },
-    "comment created successfully on post !",
+  if (!createdComment) {
+    throw new ApiError(401, "some thing went wrong while creating  comment");
+  }
+  new ApiResponse(200, { comment: createdComment }, "Comment added successfully on post !").send(
+    res,
   );
-  res.status(201).json(responseInstance);
 });
 
 const addCommentOnReel = asyncHandler(async (req, res) => {
   const reelId = req.params?.id;
   const userId = req.user?._id;
-  const targetedReelToAddComment = await findReelById(reelId, userId);
+  const { content } = req.body;
+
+  const targetedReelToAddComment = await ReelServices.findReelById(reelId, userId);
   if (!targetedReelToAddComment) {
     throw new ApiError(404, "reel not found, Invalid reel Id ");
   }
   // Ensure reel has allow to add comments
-  if (!targetedReelToAddComment?.configuration?.allowComments) {
+  if (!targetedReelToAddComment?.allowComments) {
     throw new ApiResponse(401, {}, "reel does not allow comments");
   }
-  const { content } = req.body;
   const createdComment = await CommentModel.create({
-    author: userId,
+    owner: userId,
     reel: reelId,
     content,
   });
-  const responseInstance = new ApiResponse(
-    201,
-    { comment: createdComment },
-    "comment created successfully on reel !",
+  new ApiResponse(200, { comment: createdComment }, "Comment added  successfully on reel !").send(
+    res,
   );
-  res.status(201).json(responseInstance);
 });
 
 const addCommentOnTweet = asyncHandler(async (req, res) => {
   const tweetId = req.params?.id;
   const userId = req.user?._id;
-  const targetedTweetToAddComment = await findTweetById(tweetId, userId);
+  const targetedTweetToAddComment = await TweetServices.findTweetById(tweetId);
   if (!targetedTweetToAddComment) {
-    throw new ApiError(404, "tweet not found, Invalid tweet Id ");
+    throw new ApiError(404, "Tweet not found, Invalid tweet Id ");
   }
   // Ensure post has allow to add comments
-  if (!targetedTweetToAddComment?.configuration?.allowComments) {
-    throw new ApiResponse(401, {}, "tweet does not allow comments");
+  if (!targetedTweetToAddComment?.allowComments) {
+    throw new ApiResponse(401, {}, "Tweet does not allow comments");
   }
   const { content } = req.body;
   const createdComment = await CommentModel.create({
-    author: userId,
+    owner: userId,
     tweet: tweetId,
     content,
   });
-  const responseInstance = new ApiResponse(
-    201,
-    { comment: createdComment },
-    "comment created successfully on tweet !",
+  new ApiResponse(200, { comment: createdComment }, "Comment added  successfully on tweet!").send(
+    res,
   );
-  res.status(201).json(responseInstance);
+});
+
+const getPostComments = asyncHandler(async (req, res) => {
+  const postId = req.params.id;
+  const targetedPostToGetComments = await PostServices.findPostById(postId);
+  if (!targetedPostToGetComments) {
+    throw new ApiError(404, "Post not found, Invalid post Id ");
+  }
+  const postComments = await PostServices.findPostComments(postId);
+  if (!postComments?.length) {
+    throw new ApiError(404, "Post comments does not exists ");
+  }
+  new ApiResponse(200, { comment: postComments }, "Post Comment fetched successfully !").send(res);
+});
+
+const getReelComments = asyncHandler(async (req, res) => {
+  const reelId = req.params.id;
+  const targetedReelToGetComments = await ReelServices.findReelById(reelId);
+  if (!targetedReelToGetComments) {
+    throw new ApiError(404, "reel not found, Invalid reel Id ");
+  }
+  const reelComments = await ReelServices.findReelComments(reelId);
+  if (!reelComments?.length) {
+    throw new ApiError(404, "reel comments does not exists ");
+  }
+  new ApiResponse(200, { comment: reelComments }, "Reel Comment fetched successfully !").send(res);
+});
+
+const getTweetComments = asyncHandler(async (req, res) => {
+  const tweetId = req.params.id;
+  const targetedTweetToGetComments = await TweetServices.findTweetById(tweetId);
+  if (!targetedTweetToGetComments) {
+    throw new ApiError(404, "Tweet not found, Invalid tweet Id ");
+  }
+  const tweetComments = await TweetServices.findTweetComments(tweetId);
+  if (!tweetComments?.length) {
+    throw new ApiError(404, "Tweet comments does not exists ");
+  }
+  new ApiResponse(200, { comment: tweetComments }, "Tweet Comment fetched successfully !").send(
+    res,
+  );
 });
 
 // get comment Id from params and update its content by provided content
@@ -94,81 +132,17 @@ const updateComment = asyncHandler(async (req, res) => {
   if (!updatedComment) {
     throw new ApiError(500, "some thing went wrong while updating comment");
   }
-  const responseInstance = new ApiResponse(
-    200,
-    { comment: updatedComment },
-    "comment updated successfully on post!",
-  );
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, { comment: updatedComment }, "Comment Updated successfully !").send(res);
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
   const commentId = req.params.id;
   const deletedComment = await CommentModel.findByIdAndDelete(commentId);
   await LikeModel.deleteMany({ comment: commentId }); // delete comment corresponding likes
-  const responseInstance = new ApiResponse(
-    200,
-    { deletedComment },
-    "comment has deleted successfully !",
-  );
-  res.status(200).json(responseInstance);
-});
-
-const getPostComments = asyncHandler(async (req, res) => {
-  const postId = req.params.id;
-  const userId = req.user?._id;
-  const targetedPostToGetComments = await findPostById(postId, userId);
-  if (!targetedPostToGetComments) {
-    throw new ApiError(404, "post not found, Invalid post Id ");
+  if (!deletedComment) {
+    throw new ApiError(500, "some thing went wrong while deleting comment");
   }
-  const postComments = await findPostComments(postId, userId);
-  if (!postComments?.length) {
-    throw new ApiError(404, "post comments does not exists ");
-  }
-  const responseInstance = new ApiResponse(
-    200,
-    { comments: postComments },
-    "comments fetched successfully",
-  );
-  res.status(200).json(responseInstance);
-});
-
-const getReelComments = asyncHandler(async (req, res) => {
-  const reelId = req.params.id;
-  const userId = req.user?._id;
-  const targetedReelToGetComments = await findReelById(reelId, userId);
-  if (!targetedReelToGetComments) {
-    throw new ApiError(404, "reel not found, Invalid reel Id ");
-  }
-  const reelComments = await findReelComments(reelId, userId);
-  if (!reelComments?.length) {
-    throw new ApiError(404, "reel comments does not exists ");
-  }
-  const responseInstance = new ApiResponse(
-    200,
-    { comments: reelComments },
-    "comments fetched successfully",
-  );
-  res.status(200).json(responseInstance);
-});
-
-const getTweetComments = asyncHandler(async (req, res) => {
-  const tweetId = req.params.id;
-  const userId = req.user?._id;
-  const targetedTweetToGetComments = await findTweetById(tweetId, userId);
-  if (!targetedTweetToGetComments) {
-    throw new ApiError(404, "tweet not found, Invalid tweet Id ");
-  }
-  const tweetComments = await findTweetComments(tweetId, userId);
-  if (!tweetComments?.length) {
-    throw new ApiError(404, "tweet comments does not exists ");
-  }
-  const responseInstance = new ApiResponse(
-    200,
-    { comments: tweetComments },
-    "comments fetched successfully",
-  );
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, {}, "Comment has deleted successfully !").send(res);
 });
 
 export {

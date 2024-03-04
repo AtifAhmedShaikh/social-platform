@@ -1,47 +1,42 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { findUserById, findUserProfileByUsername, findUsers } from "../services/user.service.js";
+import UserServices from "../services/user.service.js";
 
-const getUsers = asyncHandler(async (req, res) => {
-  const userId = req.user?._id;
-  const users = await findUsers(userId);
+const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await UserServices.findUsers();
   if (!users?.length) {
-    throw new ApiError(404, "users not found ");
+    throw new ApiError(404, "Users does not exits !");
   }
-  const responseInstance = new ApiResponse(200, { users }, "users fetched successfully! ");
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, { users }, "Users are fetched successfully !").send(res);
 });
 
 const getUserById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const user = await findUserById(id);
+  const userId = req.params.id; // user ID to be find
+  const user = await UserServices.findUserById(userId);
   if (!user) {
-    throw new ApiError(404, "user not found ");
+    throw new ApiError(404, "User not found ");
   }
-  const responseInstance = new ApiResponse(200, { user }, "user fetched successfully! ");
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, { user }, "User has fetched successfully !").send(res);
 });
 
 // Get current loggedIn user
-const getCurrentUser = asyncHandler((req, res) => {
-  const user = req.user;
-  const responseInstance = new ApiResponse(200, { user }, "users fetched successfully! ");
-  res.status(200).json(responseInstance);
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const userId = req.user?._id; // get currently loggedIn user ID
+  const currentUser = await UserServices.findUserById(userId);
+  new ApiResponse(200, { user: currentUser }, "Current user fetched successfully !").send(res);
 });
 
 const getUserProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
-  const userId = req.user._id;
   if (!username?.trim()) {
     throw new ApiError(400, "username is required for fetch user profile !");
   }
-  const profile = await findUserProfileByUsername(username, userId);
+  const profile = await UserServices.findUserProfileByUsername(username);
   if (!profile) {
     throw new ApiError(400, `${username}'s profile not found !`);
   }
-  const responseInstance = new ApiResponse(200, { profile }, "user profile fetched successfully! ");
-  res.status(200).json(responseInstance);
+  new ApiResponse(200, { profile }, ` ${username}'s Profile has fetched successfully !`).send(res);
 });
 
-export { getUsers, getUserById, getCurrentUser, getUserProfile };
+export { getAllUsers, getUserById, getCurrentUser, getUserProfile };

@@ -1,0 +1,98 @@
+import GalleryModel from '../models/Gallery.model';
+import PostModel from '../models/Post.model';
+import LikeModel from '../models/Like.model';
+import CommentModel from '../models/Comment.model';
+import UserModel from '../models/User.model';
+
+const fetchUserGalleryDetails = async (userId) => {
+  try {
+    const userGallery = await GalleryModel.findOne({ user: userId })
+      .populate({
+        path: 'posts',
+        model: PostModel,
+        populate: [
+          {
+            path: 'creator',
+            model: UserModel,
+            select: 'username profilePicture', // adjust the fields you want to select
+          },
+          {
+            path: 'likes',
+            model: LikeModel,
+          },
+          {
+            path: 'comments',
+            model: CommentModel,
+          },
+        ],
+      });
+
+    if (!userGallery) {
+      return null; // or handle as needed
+    }
+
+    // Calculate likeCount and commentCount for each post
+    const galleryWithDetails = userGallery.posts.map((post) => {
+      const likeCount = post.likes.length;
+      const commentCount = post.comments.length;
+
+      return {
+        ...post.toObject(),
+        likeCount,
+        commentCount,
+      };
+    });
+
+    return galleryWithDetails;
+  } catch (error) {
+    console.error('Error in fetchUserGalleryDetails controller:', error);
+    throw error;
+  }
+};
+
+// Example usage: 
+// const userId = 'your_user_id_here';
+// const userGalleryDetails = await fetchUserGalleryDetails(userId);
+// console.log(userGalleryDetails);
+
+
+followSchema.pre("aggregate", function (next) {
+  const userId = app.locals.user?._id; // get loggedIn user Id
+  this.lookup({
+    from: "users",
+    localField: "follower",
+    foreignField: "_id",
+    as: "follower",
+    pipeline: [
+      {
+        $lookup: {
+          from: "follows",
+          localField: "_id",
+          foreignField: "user",
+          as: "followers",
+        },
+      },
+      {
+        $lookup: {
+          from: "follows",
+          localField: "_id",
+          foreignField: "follower",
+          as: "following",
+        },
+      },
+      {
+        $addFields: {
+          followerCount: { $size: "$followers" },
+          followingCount: { $size: "$following" },
+          isFollowing: {
+            $in: [userId, "$followers.follower"],
+          },
+        },
+      },
+    ],
+  });
+  this.addFields({ follower: { $first: "$follower" } });
+  this.append({ $replaceRoot: { newRoot: "$follower" } });
+  this.project({ password: 0, followers: 0, following: 0, updatedAt: 0, __v: 0 });
+  next();
+});

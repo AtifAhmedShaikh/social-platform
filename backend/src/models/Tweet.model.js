@@ -1,19 +1,31 @@
 import mongoose from "mongoose";
-import ContentConfiguration from "./ContentConfig.model.js";
-import LikeModel from "../models/Like.model.js";
-import CommentModel from "../models/Comment.model.js";
-// model to user history of tracking to save any post,tweet or reels
+
 const tweetSchema = new mongoose.Schema(
   {
-    // user who is write a tweet
-    author: {
+    // user who is added a tweet
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       required: true,
     },
     content: {
       type: String,
       required: true,
+    },
+    // private tweet only for his followers but public is for everyone
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+    // allow to write comments on post
+    allowComments: {
+      type: Boolean,
+      default: true,
+    },
+    // allow to save the post
+    allowSaving: {
+      type: Boolean,
+      default: true,
     },
   },
   {
@@ -21,31 +33,20 @@ const tweetSchema = new mongoose.Schema(
   },
 );
 
-const TweetModel = mongoose.model("tweet", tweetSchema);
-
-// Define custom method to create new tweet and a corresponding content config document as well in database
-TweetModel.createTweet = async function (tweetData) {
-  // create new tweet document in database
-  const createdTweet = await this.create({
-    content: tweetData.content,
-    author: tweetData.author,
+tweetSchema.pre("aggregate", function (next) {
+  this.project({
+    __v: 0,
+    followers: 0,
+    following: 0,
+    likes: 0,
+    comments: 0,
+    "owner.__v": 0,
+    "owner.updatedAt": 0,
+    "owner.password": 0,
   });
-  // create new  config document for this tweet, if any config property are not provided its default true
-  await ContentConfiguration.create({
-    tweetId: createdTweet._id, // attach currently created tweet ID
-    isPublic: tweetData.isPublic ?? true,
-    displayLikeCount: tweetData.displayLikeCount ?? true,
-    allowSaving: tweetData.allowSaving ?? true,
-    allowSharing: tweetData.allowSharing ?? true,
-  });
-  return createdTweet;
-};
+  next();
+});
 
-TweetModel.deleteTweetById = async function (tweetId) {
-  await this.findByIdAndDelete(tweetId);
-  await ContentConfiguration.deleteOne({ tweetId });
-  await LikeModel.deleteMany({ tweet: tweetId });
-  await CommentModel.deleteMany({ tweet: tweetId });
-};
+const TweetModel = mongoose.model("Tweet", tweetSchema);
 
 export default TweetModel;

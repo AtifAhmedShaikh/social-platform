@@ -6,5 +6,7 @@
   "trailingComma": "all",
   "bracketSpacing": true,
   "arrowParens": "avoid",
+  "parentheses": "all",
+  "space-before-function-paren": "all",
   "plugins": ["eslint"]
 }

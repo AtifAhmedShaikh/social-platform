@@ -1,14 +1,11 @@
 import mongoose from "mongoose";
-import ContentConfiguration from "./ContentConfig.model.js";
-import LikeModel from "../models/Like.model.js";
-import CommentModel from "../models/Comment.model.js";
-// model to user history of tracking to save any post,tweet or reels
+
 const reelsSchema = new mongoose.Schema(
   {
     // user who is create or upload the reel from users
-    creator: {
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       required: true,
     },
     caption: {
@@ -27,37 +24,41 @@ const reelsSchema = new mongoose.Schema(
       type: Number,
       default: 60 * 3, // default 3mins
     },
+    // private reel only for his followers but public is for everyone
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+    // allow to write comments on post
+    allowComments: {
+      type: Boolean,
+      default: true,
+    },
+    // allow to save the post
+    allowSaving: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,
   },
 );
 
-const ReelModel = mongoose.model("reel", reelsSchema);
-
-// Define custom method to create new post and a corresponding content config document as well in database
-ReelModel.createReel = async function (reelData) {
-  // create new post document in database
-  const createdReel = await this.create({
-    creator: reelData.creator,
-    caption: reelData.caption,
-    reelVideoFile: reelData.reelVideoFile,
+reelsSchema.pre("aggregate", function (next) {
+  this.project({
+    __v: 0,
+    followers: 0,
+    following: 0,
+    likes: 0,
+    comments: 0,
+    "owner.__v": 0,
+    "owner.updatedAt": 0,
+    "owner.password": 0,
   });
-  // create new  config document for this reel, if any config property are not provided its default true
-  await ContentConfiguration.create({
-    reelId: createdReel._id, // attach currently created reel ID
-    isPublic: reelData.isPublic ?? true,
-    displayLikeCount: reelData.displayLikeCount ?? true,
-    allowSaving: reelData.allowSaving ?? true,
-    allowSharing: reelData.allowSharing ?? true,
-  });
-};
+  next();
+});
 
-ReelModel.deleteReelById = async function (reelId) {
-  await this.findByIdAndDelete(reelId);
-  await ContentConfiguration.deleteOne({ reelId });
-  await LikeModel.deleteMany({ reel: reelId });
-  await CommentModel.deleteMany({ reel: reelId });
-};
+const ReelModel = mongoose.model("Reel", reelsSchema);
 
 export default ReelModel;

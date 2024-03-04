@@ -11,9 +11,9 @@ const router = express.Router();
 
 router.use(authenticateUser);
 
-router.route("/toggle/post/:id").patch(togglePostLike);
-router.route("/toggle/reel/:id").patch(toggleReelLike);
-router.route("/toggle/tweet/:id").patch(toggleTweetLike);
-router.route("/toggle/comment/:id").patch(toggleCommentLike);
+router.route("/toggle/post/:id").post(togglePostLike);
+router.route("/toggle/reel/:id").post(toggleReelLike);
+router.route("/toggle/tweet/:id").post(toggleTweetLike);
+router.route("/toggle/comment/:id").post(toggleCommentLike);
 
 export default router;

@@ -2,20 +2,20 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../config/envConfig.js";
 import Jwt from "jsonwebtoken";
-import GalleryModel from "./UserGallery.model.js";
-import ApiError from "../utils/ApiError.js";
-import UserHistory from "../models/UserHistory.model.js";
 
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
+      index: true,
       required: true,
     },
     username: {
       type: String,
       unique: true,
       trim: true,
+      lowercase: true,
+      index: true,
       required: true,
     },
     email: {
@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
     },
     bio: {
       type: String,
-      default: "Hi there, i am using social-platform",
+      required: true,
     },
     avatar: {
       type: String,
@@ -46,7 +46,42 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-// encrypt user password before save the document in database
+userSchema.pre("aggregate", function (next) {
+  this.project({
+    password: 0,
+    __v: 0,
+    updatedAt: 0,
+    followers: 0,
+    following: 0,
+    "posts.__v": 0,
+    "posts.likes": 0,
+    "posts.comments": 0,
+    "posts.followers": 0,
+    "posts.following": 0,
+    "posts.owner.updatedAt": 0,
+    "posts.owner.__v": 0,
+    "posts.owner.password": 0,
+    "tweets.__v": 0,
+    "tweets.likes": 0,
+    "tweets.comments": 0,
+    "tweets.followers": 0,
+    "tweets.following": 0,
+    "tweets.owner.updatedAt": 0,
+    "tweets.owner.__v": 0,
+    "tweets.owner.password": 0,
+    "reels.__v": 0,
+    "reels.likes": 0,
+    "reels.comments": 0,
+    "reels.followers": 0,
+    "reels.following": 0,
+    "reels.owner.updatedAt": 0,
+    "reels.owner.__v": 0,
+    "reels.owner.password": 0,
+  });
+  next();
+});
+
+// encrypt the user password before save the document in database
 userSchema.pre("save", async function (next) {
   try {
     if (!this.isModified("password")) return next();
@@ -59,34 +94,7 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-// middleware for the user schema to automatically create a corresponding gallery document
-userSchema.post("save", async function (docs, next) {
-  try {
-    // create a new gallery document and link it to the user by attaching the user ID
-    const createdGallery = await GalleryModel.create({
-      user: docs._id,
-    });
-    console.log(createdGallery);
-    next();
-  } catch (error) {
-    throw new ApiError(500, "something went wrong while creating Gallery Document of user ");
-  }
-});
-
-// middleware for the user schema to automatically create a corresponding history document
-userSchema.post("save", async function (docs, next) {
-  try {
-    const createdHistory = await UserHistory.create({
-      owner: docs._id, // attach user Id
-    });
-    console.log(createdHistory);
-    next();
-  } catch (error) {
-    throw new ApiError(500, "something went wrong while creating User History Document of user ");
-  }
-});
-
-// method to check provided plain text password with the hashed password by using bcrypt
+// method to compare provided plain text password with the hashed password by using bcrypt
 userSchema.methods.isCorrectPassword = async function (plainTextPassword) {
   try {
     return await bcrypt.compare(plainTextPassword, this.password);
@@ -128,6 +136,6 @@ userSchema.methods.generateRefreshToken = function () {
   }
 };
 
-const UserModel = mongoose.model("user", userSchema);
+const UserModel = mongoose.model("User", userSchema);
 
 export default UserModel;

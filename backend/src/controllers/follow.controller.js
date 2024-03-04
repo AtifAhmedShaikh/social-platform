@@ -1,35 +1,72 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import FollowModel from "../models/Follow.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { findUserById } from "../services/user.service.js";
+import UserServices from "../services/user.service.js";
 import ApiError from "../utils/ApiError.js";
 
-// follow and unfollow to user toggle
-const followToggle = asyncHandler(async (req, res) => {
-  const targetedUserId = req.params.id; // targeted user ID to follow and unfollow
-  const followerId = req.user?._id; // current loggedIn user ID
-  // ensure targeted user has exists in database
-  const targetedUser = await findUserById(targetedUserId);
-  if (!targetedUser) {
-    throw new ApiError(404, "user not found, Invalid user ID ");
+const followToUser = asyncHandler(async (req, res) => {
+  const targetedUserIdToFollow = req.params.id; // user to follow
+  const follower = req.user._id; // get loggedIn user id as follower
+  const targetedUserToFollow = await UserServices.findUserById(targetedUserIdToFollow);
+  if (!targetedUserToFollow) {
+    throw new ApiError(404, "User not found, Invalid user ID ");
   }
-  // check current user has already following targeted user
-  const isFollowing = await FollowModel.findOne({
-    user: targetedUserId,
-    follower: followerId,
-  }).populate("user");
-
-  if (isFollowing) {
-    // delete the document for unfollow this targeted user
-    await FollowModel.deleteOne({ user: targetedUserId, follower: followerId });
-    const responseInstance = new ApiResponse(200, {}, `You unfollow ${targetedUser.username}`);
-    return res.status(200).json(responseInstance);
-  } else {
-    // create new document for follow this targeted user
-    await FollowModel.create({ user: targetedUserId, follower: followerId });
-    const responseInstance = new ApiResponse(200, {}, `You are now following ${targetedUser.username}`);
-    return res.status(200).json(responseInstance);
+  // check the current user has already following targeted user
+  const hasFollowedByCurrentUser = await FollowModel.findOne({
+    user: targetedUserIdToFollow,
+    follower: follower,
+  });
+  if (hasFollowedByCurrentUser) {
+    throw new ApiError(409, `you are already following the ${targetedUserToFollow.username}`);
   }
+  const createdFollower = await FollowModel.create({
+    user: targetedUserIdToFollow,
+    follower: follower,
+  });
+  if (!createdFollower) {
+    throw new ApiError(500, "Some thing went wrong while following ");
+  }
+  new ApiResponse(200, {}, `You are now following ${targetedUserToFollow.username}`).send(res);
 });
 
-export { followToggle };
+const unfollowToUser = asyncHandler(async (req, res) => {
+  const targetedUserId = req.params.id; // targeted user ID to unfollow
+  const follower = req.user?._id; // current loggedIn user ID as follower
+
+  // ensure targeted user has exists in database
+  const targetedUserToUnfollow = await UserServices.findUserById(targetedUserId);
+  if (!targetedUserToUnfollow) {
+    throw new ApiError(404, "User not found, Invalid user ID ");
+  }
+  // check current user has already following the targeted user
+  const hasFollowedByCurrentUser = await FollowModel.findOne({
+    user: targetedUserId,
+    follower: follower,
+  });
+
+  if (!hasFollowedByCurrentUser) {
+    throw new ApiError(409, `you are not following the ${targetedUserToUnfollow.username}`);
+  }
+  const deletedFollowDocument = await FollowModel.deleteOne({
+    user: targetedUserId,
+    follower: follower,
+  });
+  if (!deletedFollowDocument) {
+    throw new ApiError(500, "Some thing went wrong while unfollow the user ");
+  }
+  new ApiResponse(200, {}, `You unfollow the ${targetedUserToUnfollow.username}`).send(res);
+});
+
+const getUserFollowersList = asyncHandler(async (req, res) => {
+  const userId = req.params.id; // get user id to find his followers list
+  const followersList = await UserServices.findUserFollowersList(userId);
+  new ApiResponse(200, { followers: followersList }, "followers users list fetched ").send(res);
+});
+
+const getUserFollowingList = asyncHandler(async (req, res) => {
+  const userId = req.params.id; // get user id to find his following list
+  const followingList = await UserServices.findUserFollowingList(userId);
+  new ApiResponse(200, { followers: followingList }, "following users list fetched ").send(res);
+});
+
+export { followToUser, unfollowToUser, getUserFollowersList, getUserFollowingList };

@@ -2,6 +2,7 @@ import express from "express";
 import { authenticateUser } from "../middleware/auth.middleware.js";
 import { isAuthorizedToCommentModification } from "../middleware/authZ.middleware.js";
 import { validateData } from "../middleware/validation.middleware.js";
+import { commentSchema } from "../schema/contentSchema.js";
 import {
   getReelComments,
   getPostComments,
@@ -12,7 +13,7 @@ import {
   updateComment,
   deleteComment,
 } from "../controllers/comment.controller.js";
-import { commentSchema } from "../validation/contentSchema.js";
+
 const router = express.Router();
 
 router.use(authenticateUser);
@@ -23,6 +24,7 @@ router
   .route("/tweet/:id")
   .get(getTweetComments)
   .post(validateData(commentSchema), addCommentOnTweet);
+
 router
   .route("/:id")
   .put(isAuthorizedToCommentModification, validateData(commentSchema), updateComment)

@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
-// model to user history of tracking to save any post,tweet or reels
+
 const commentSchema = new mongoose.Schema(
   {
     // user who is commented on post or reel..
-    author: {
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      ref: "User",
       required: true,
     },
     // content or message of comment
@@ -31,5 +31,19 @@ const commentSchema = new mongoose.Schema(
   },
 );
 
-const CommentModel = mongoose.model("comment", commentSchema);
+commentSchema.pre("aggregate", function (next) {
+  this.project({
+    __v: 0,
+    followers: 0,
+    likes: 0,
+    likes: 0,
+    "owner.__v": 0,
+    "owner.updatedAt": 0,
+    "owner.password": 0,
+  });
+  next();
+});
+
+const CommentModel = mongoose.model("Comment", commentSchema);
+
 export default CommentModel;
